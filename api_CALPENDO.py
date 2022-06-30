@@ -45,7 +45,7 @@ class CalpendoApi(AbstractApi):
         debug_print(data['dataPath'])
 
         # TODO: Implement custom path and file patterns in Calpendo
-        patterns['sort_path_pattern'] = f"{data['dataPath']}/{protocol_name}/$SubjectName/$DateStamp/$SeriesNumber.$SeriesDescription"
+        patterns['sort_path_pattern'] = f"{data['dataPath']}/$ProtocolName/$SubjectName/$DateStamp/$SeriesNumber.$SeriesDescription"
 
         return patterns
 

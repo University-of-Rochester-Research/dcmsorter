@@ -33,8 +33,7 @@ class ExitCodes:
 
 
 INCOMING_DIR = environ.get("MERCURE_IN_DIR", "/in")
-MERCURE_OUT_DIR = environ.get("MERCURE_OUT_DIR", "/out")
-OUTGOING_DIR = environ.get("OUTGOING_DIR", MERCURE_OUT_DIR)
+OUTGOING_DIR = environ.get("OUTGOING_DIR", "/out")
 ARCHIVE_DIR = environ.get("ARCHIVE_DIR", "/archive")
 CONFIG_PATH = environ.get("CONFIG_DIR", "/app/config")
 DEBUG = environ.get("DEBUG", False)
@@ -52,21 +51,12 @@ DEFAULT_ARCHIVE_FILE_PATTERN = environ.get("DEFAULT_ARCHIVE_FILE_PATTERN",
 try:
     with open(os.path.join(CONFIG_PATH, 'stations.json'), 'r') as json_file:
         stations: dict = json.load(json_file)
-
-    with open(os.path.join(INCOMING_DIR, "task.json"), "r") as json_file:
-        task: dict = json.load(json_file)
-
 except FileNotFoundError:
-    error_print("No stations.json and/or task.json found")
+    error_print("No stations.json found")
     sys.exit(ExitCodes.MISSING_CONFIG)
 except JSONDecodeError:
-    error_print("Invalid JSON file stations.json and/or task.json")
+    error_print("Invalid JSON file stations.json")
     sys.exit(ExitCodes.MISSING_CONFIG)
-
-if task.get("process", False):
-    settings = task["process"].get("settings", False)
-    if settings:
-        stations.update(settings.get("stations", {}))
 
 if not Path(INCOMING_DIR).exists() or not Path(OUTGOING_DIR).exists():
     error_print("IN/OUT paths do not exist")

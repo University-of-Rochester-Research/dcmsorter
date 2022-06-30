@@ -14,11 +14,13 @@ from pydicom.errors import InvalidDicomError
 
 from common import *
 
-api_config = os.environ.get('API', 'FILE')
+api_config = os.environ.get('API', 'MERCURE')
 if api_config == "CALPENDO":
     from api_CALPENDO import CalpendoApi as API
-else:
+elif api_config == "FILE":
     from api_FILE import FileApi as API
+else:
+    from api_MERCURE import MercureApi as API
 
 api = API()
 filenames = []
