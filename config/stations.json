@@ -1,0 +1,26 @@
+{
+  "default": {
+    "TagForStudy": "StudyDescription",
+    "StudySplit": "^",
+    "StudySplitIndex": 0,
+    "TagForProtocol": "StudyDescription",
+    "ProtocolSplit": "^",
+    "ProtocolSplitIndex": 1,
+    "archive": true,
+    "sort": true
+  },
+  "station1": {
+    "TagForStudy": "StudyDescription",
+    "StudySplit": false,
+    "StudySplitIndex": 0,
+    "TagForProtocol": "ProtocolName",
+    "ProtocolSplit": false,
+    "ProtocolSplitIndex": 0,
+    "archive": true,
+    "sort": false,
+    "sort_path_pattern": "",
+    "sort_file_pattern": "",
+    "archive_path_pattern": "",
+    "archive_file_pattern": ""
+  }
+}
