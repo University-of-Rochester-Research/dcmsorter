@@ -1,7 +1,15 @@
 import json
+import os
 
 from AbstractApi import AbstractApi
-from common import CONFIG_DIR, ExitCodes, error_print
+from common import CONFIG_PATH, ExitCodes, error_print
+
+try:
+    with open(os.path.join(CONFIG_PATH,"studies.json")) as json_file:
+        StudiesConfig = json.load(json_file)
+except FileNotFoundError:
+    error_print(f"{CONFIG_PATH}/studies.json not found")
+    exit(ExitCodes.MISSING_CONFIG)
 
 
 class FileApi(AbstractApi):
@@ -9,18 +17,10 @@ class FileApi(AbstractApi):
         return self.study_path(tags, patterns)
 
     def study_path(self, tags: dict, patterns: dict):
-        try:
-            with open(f'{CONFIG_DIR}/studies.json') as json_file:
-                StudiesConfig = json.load(json_file)
-        except FileNotFoundError:
-            error_print(f"{CONFIG_DIR}/studies.json not found")
-            exit(ExitCodes.MISSING_CONFIG)
+        ProtocolConfig = StudiesConfig.get(f"protocol:{tags['ProtocolName']}", {})
+        StudyConfig = StudiesConfig.get(f"studyname:{tags['StudyName']}", {})
 
-        DefaultConfig = StudiesConfig.get("default", {})
-        ProtocolConfig = StudiesConfig.get(tags['ProtocolName'], {})
-        StudyConfig = StudiesConfig.get(tags['StudyName'], {})
-
-        Config = {**DefaultConfig, **ProtocolConfig, **StudyConfig}
+        Config = {**StudyConfig, **ProtocolConfig}
 
         patterns["sort_path_pattern"] = Config.get("sort_path_pattern",patterns["sort_path_pattern"])
         patterns["sort_file_pattern"] = Config.get("sort_file_pattern",patterns["sort_file_pattern"])
@@ -28,4 +28,3 @@ class FileApi(AbstractApi):
         patterns["archive_file_pattern"] = Config.get("archive_file_pattern",patterns["archive_file_pattern"])
 
         return patterns
-

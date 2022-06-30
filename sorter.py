@@ -2,20 +2,15 @@
 # cython: language_level=3
 import filecmp
 import hashlib
-import json
 import os
 import re
 import shutil
-import sys
 import tarfile
 import unicodedata
 from string import Template
 
 from pydicom import filereader
 from pydicom.errors import InvalidDicomError
-
-# API to load for looking up study paths
-from typing import Dict
 
 from common import *
 
@@ -86,17 +81,9 @@ if not series:
     print("No files found to be processed")
     sys.exit(ExitCodes.NOTHING_TO_DO)
 
-try:
-    with open(f'{CONFIG_DIR}/stations.json') as json_file:
-        AllStationsConfig = json.load(json_file)
-
-    DefaultStationConfig = AllStationsConfig.get("default", {})
-except FileNotFoundError:
-    error_print(f"{CONFIG_DIR}/stations.json not found")
-    exit(ExitCodes.MISSING_CONFIG)
-
 # Keep track of duplicate files
 dup_files = {}
+
 
 def archive_file(file: str, tags: dict, patterns: dict, tars: dict):
     patterns = api.archive_path(tags=tags, patterns=patterns)
@@ -177,8 +164,7 @@ for seriesString in series:
         # Find Station Name, each Station has different methods of encoding Study Names
         StationName = get_header("StationName", ds=dataset)
         print(f"Station Name: {StationName}")
-        ThisStationConfig = AllStationsConfig.get(StationName, DefaultStationConfig)
-        StationConfig = {**DefaultStationConfig, **ThisStationConfig}
+        StationConfig = stations.get(StationName, stations.get("default"))
 
         StudyTag = StationConfig.get('TagForStudy', 'StudyDescription')
         StudyName = get_header(StudyTag, ds=dataset, validate=False)

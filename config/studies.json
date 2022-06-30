@@ -1,12 +1,8 @@
 {
-  "default": {
-    "archive": true,
-    "sort": true
-  },
-  "study1": {
+  "studyname:study1": {
     "dataPath": "/data_share1/group1"
   },
-  "protocol1": {
+  "protocolname:protocol1": {
     "dataPath": "/data_share2/group5/study1"
   }
 }
