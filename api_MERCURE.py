@@ -1,26 +1,5 @@
-import json
-import os
-import sys
-from json import JSONDecodeError
-
 from AbstractApi import AbstractApi
-from common import stations, INCOMING_DIR, error_print, ExitCodes
-
-try:
-    with open(os.path.join(INCOMING_DIR, "task.json"), "r") as json_file:
-        task: dict = json.load(json_file)
-except FileNotFoundError:
-    error_print("No task.json found")
-    sys.exit(ExitCodes.MISSING_CONFIG)
-except JSONDecodeError:
-    error_print("Invalid JSON file task.json")
-    sys.exit(ExitCodes.MISSING_CONFIG)
-
-settings = {}
-if task.get("process", False):
-    settings = task["process"].get("settings", {})
-    if settings:
-        stations.update(settings.get("stations", {}))
+from common import settings
 
 
 class MercureApi(AbstractApi):

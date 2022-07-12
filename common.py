@@ -31,12 +31,17 @@ class ExitCodes:
     MISSING_HEADERS = 4
     OSERROR = 5
 
+DEBUG = environ.get("DEBUG", True)
 
 INCOMING_DIR = environ.get("MERCURE_IN_DIR", "/in")
 OUTGOING_DIR = environ.get("OUTGOING_DIR", "/out")
 ARCHIVE_DIR = environ.get("ARCHIVE_DIR", "/archive")
 CONFIG_PATH = environ.get("CONFIG_DIR", "/app/config")
-DEBUG = environ.get("DEBUG", True)
+
+if not Path(INCOMING_DIR).exists() or not Path(OUTGOING_DIR).exists():
+    error_print("IN/OUT paths do not exist")
+    sys.exit(ExitCodes.MISSING_CONFIG)
+
 DEFAULT_SORT_FILE_PATTERN = environ.get("DEFAULT_SORT_FILE_PATTERN",
                                         f"$SubjectName.$DateStamp.$TimeStamp.$SeriesNumber.$SeriesDescription."
                                         f"Echo_$EchoNumbers.$InstanceNumber.dcm")
@@ -47,16 +52,37 @@ DEFAULT_ARCHIVE_PATH_PATTERN = environ.get("DEFAULT_ARCHIVE_PATH_PATTERN", "$ARC
 DEFAULT_ARCHIVE_FILE_PATTERN = environ.get("DEFAULT_ARCHIVE_FILE_PATTERN",
                                            "$SubjectName.$DateStamp.$TimeStamp.$SeriesNumber.$SeriesDescription.tar")
 
+settings: dict = {}
+stations: dict = {}
+
 try:
+    # Open the stations.json file
     with open(os.path.join(CONFIG_PATH, 'stations.json'), 'r') as json_file:
-        stations: dict = json.load(json_file)
+        stations = json.load(json_file)
 except FileNotFoundError:
-    error_print("No stations.json found")
-    sys.exit(ExitCodes.MISSING_CONFIG)
+    debug_print("No stations.json found, maybe it is in task.json")
 except JSONDecodeError:
     error_print("Invalid JSON file stations.json")
     sys.exit(ExitCodes.MISSING_CONFIG)
 
-if not Path(INCOMING_DIR).exists() or not Path(OUTGOING_DIR).exists():
-    error_print("IN/OUT paths do not exist")
+try:
+    # Check if we're in Mercure
+    with open(os.path.join(INCOMING_DIR, "task.json"), "r") as json_file:
+        task: dict = json.load(json_file)
+
+    # Get the process
+    if task.get("process", False):
+        # Get the settings
+        settings = task["process"].get("settings", {})
+        if settings:
+            # Overwrite any existing stations
+            stations.update(settings.get("stations", {}))
+except FileNotFoundError:
+    debug_print("No task.json found, not in Mercure?")
+except JSONDecodeError:
+    error_print("Invalid JSON file task.json")
+    sys.exit(ExitCodes.MISSING_CONFIG)
+
+if not stations:
+    error_print("No list of stations found")
     sys.exit(ExitCodes.MISSING_CONFIG)
