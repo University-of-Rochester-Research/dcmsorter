@@ -2,7 +2,6 @@
 # cython: language_level=3
 import filecmp
 import hashlib
-import os
 import re
 import shutil
 import tarfile
@@ -94,8 +93,9 @@ def archive_file(file: str, tags: dict, patterns: dict, tars: dict):
         path_template = Template(patterns['archive_path_pattern'])
         output_path = path_template.substitute(**tags)
         os.makedirs(output_path, exist_ok=True)
-    except OSError:
+    except OSError as e:
         error_print(f"Error creating output directory {output_path}")
+        debug_print(e)
         exit(ExitCodes.OSERROR)
 
     try:
@@ -124,6 +124,8 @@ def sort_file(file: str, tags: dict, patterns: dict):
     patterns = api.study_path(tags=tags, patterns=patterns)
 
     try:
+        tags['OUTGOING_DIR'] = OUTGOING_DIR
+        tags['ARCHIVE_DIR'] = ARCHIVE_DIR
         path_template = Template(patterns['sort_path_pattern'])
         output_path = path_template.substitute(**tags)
         os.makedirs(output_path, exist_ok=True)

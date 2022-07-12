@@ -36,17 +36,16 @@ INCOMING_DIR = environ.get("MERCURE_IN_DIR", "/in")
 OUTGOING_DIR = environ.get("OUTGOING_DIR", "/out")
 ARCHIVE_DIR = environ.get("ARCHIVE_DIR", "/archive")
 CONFIG_PATH = environ.get("CONFIG_DIR", "/app/config")
-DEBUG = environ.get("DEBUG", False)
+DEBUG = environ.get("DEBUG", True)
 DEFAULT_SORT_FILE_PATTERN = environ.get("DEFAULT_SORT_FILE_PATTERN",
                                         f"$SubjectName.$DateStamp.$TimeStamp.$SeriesNumber.$SeriesDescription."
                                         f"Echo_$EchoNumbers.$InstanceNumber.dcm")
 DEFAULT_SORT_PATH_PATTERN = environ.get("DEFAULT_SORT_PATH_PATTERN",
-                                        f"{OUTGOING_DIR}/$StudyName/$ProtocolName/"
-                                        f"$SubjectName/$DateStamp/$SeriesNumber.$SeriesDescription")
-DEFAULT_ARCHIVE_PATH_PATTERN = environ.get("DEFAULT_ARCHIVE_PATH_PATTERN", f"{ARCHIVE_DIR}/$StudyName/$ProtocolName")
+                                        "$OUTGOING_DIR/$StudyName/$ProtocolName/"
+                                        "$SubjectName/$DateStamp/$SeriesNumber.$SeriesDescription")
+DEFAULT_ARCHIVE_PATH_PATTERN = environ.get("DEFAULT_ARCHIVE_PATH_PATTERN", "$ARCHIVE_DIR/$StudyName/$ProtocolName")
 DEFAULT_ARCHIVE_FILE_PATTERN = environ.get("DEFAULT_ARCHIVE_FILE_PATTERN",
-                                           f"$SubjectName.$DateStamp.$TimeStamp."
-                                           f"$SeriesNumber.$SeriesDescription.tar")
+                                           "$SubjectName.$DateStamp.$TimeStamp.$SeriesNumber.$SeriesDescription.tar")
 
 try:
     with open(os.path.join(CONFIG_PATH, 'stations.json'), 'r') as json_file:

@@ -7,9 +7,9 @@ from requests import RequestException, get
 from requests.auth import HTTPBasicAuth
 
 from AbstractApi import AbstractApi
-from common import error_print, debug_print, OUTGOING_DIR
+from common import error_print, debug_print, CONFIG_PATH
 
-install_cache('/app/config/dcmsorter_cache', expire_after=3600)
+install_cache(f'{CONFIG_PATH}/dcmsorter_cache', expire_after=3600)
 
 
 class CalpendoConfig(object):
@@ -19,33 +19,39 @@ class CalpendoConfig(object):
 
 
 class CalpendoApi(AbstractApi):
-    def archive_path(self, clean_tags: dict, patterns: dict):
+    def archive_path(self, tags: dict, patterns: dict):
         # TODO: Implement archivePath in Calpendo
         return patterns
 
     # This function gets only the data path. Should ALWAYS return an os.path compatible path or an
     # URL (eg. rclone://config/targetdirectory) if you implemented the URL handler
-    def study_path(self, clean_tags: dict, patterns: dict):
-        study_name = clean_tags['StudyName']
-        protocol_name = clean_tags['ProtocolName']
+    def study_path(self, tags: dict, patterns: dict):
+        study_name = tags['StudyName']
+        protocol_name = tags['ProtocolName']
         # TODO: Implement Protocol + Study search
         # Get all the study info in cache
         data = self.study_info(study_name)
 
         # Path is not set, go to a default location
         if not data or not data['dataPath']:
-            debug_print(f"Project {study_name} does not exist or has no dataPath")
+            debug_print(f"Project {study_name} not found in Calpendo")
             return patterns
 
-        # Path is a Windows UNC, translate to a Unix Path
-        if data['dataPath'].startswith(r"\\"):
+        if data['dataPath'] and data['dataPath'].startswith(r"\\"):
+            # Path is a Windows UNC, translate to a Unix Path
             data['dataPath'] = data['dataPath'].replace("\\", "/")
 
-        debug_print("Returned Path:")
-        debug_print(data['dataPath'])
+        # There is a sorting pattern in the study
+        if data['pathPattern']:
+            patterns['sort_path_pattern'] = f"$OUTGOING_DIR/{data['pathPattern']}"
 
-        # TODO: Implement custom path and file patterns in Calpendo
-        patterns['sort_path_pattern'] = f"{data['dataPath']}/$ProtocolName/$SubjectName/$DateStamp/$SeriesNumber.$SeriesDescription"
+        # There is a file pattern in the study
+        if data['filePattern']:
+            patterns['sort_file_pattern'] = data['filePattern']
+
+        # Do this last, so pathPattern can override it
+        if data['dataPath']:
+            patterns['sort_path_pattern'] = patterns['sort_path_pattern'].replace("$OUTGOING_DIR", data['dataPath'])
 
         return patterns
 
@@ -57,6 +63,8 @@ class CalpendoApi(AbstractApi):
                        auth=HTTPBasicAuth(CalpendoConfig.CALPENDO_USER,
                                           CalpendoConfig.CALPENDO_PASS),
                        params=params)
+            debug_print("Response:")
+            debug_print(resp)
             resp.raise_for_status()
             data = resp.json()
         except RequestException as e:
@@ -68,12 +76,12 @@ class CalpendoApi(AbstractApi):
 
         return data
 
-    def study_info(self, study):
+    def study_info(self, study_name: str):
         # Search for the Project ID
-        url = 'q/Calpendo.Project/projectCode/EQ/' + study + '/'
+        url = 'q/Calpendo.Project/projectCode/EQ/' + study_name + '/'
         res = self.get_calpendo_url(url)
         if not res or not res['biskits']:
-            error_print(f"Error: Project {study} not found")
+            debug_print(f"Project {study_name} not found")
             return None
 
         project_biskit = res['biskits'][0]
@@ -82,7 +90,7 @@ class CalpendoApi(AbstractApi):
         url = '/b/Calpendo.Project/' + str(project_biskit['id'])
         res = self.get_calpendo_url(url)
         if not res or not res['properties']:
-            error_print(f"Error: Project {study} has no properties")
+            debug_print(f"Project {study_name} has no properties")
             return None
 
         project = res["properties"]
