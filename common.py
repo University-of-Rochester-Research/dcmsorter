@@ -34,12 +34,16 @@ class ExitCodes:
 DEBUG = environ.get("DEBUG", True)
 
 INCOMING_DIR = environ.get("MERCURE_IN_DIR", "/in")
-OUTGOING_DIR = environ.get("OUTGOING_DIR", "/out")
+OUTGOING_DIR = environ.get("MERCURE_OUT_DIR", "/out")
 ARCHIVE_DIR = environ.get("ARCHIVE_DIR", "/archive")
 CONFIG_PATH = environ.get("CONFIG_DIR", "/app/config")
 
-if not Path(INCOMING_DIR).exists() or not Path(OUTGOING_DIR).exists():
-    error_print("IN/OUT paths do not exist")
+if not Path(INCOMING_DIR).exists():
+    error_print(f"IN path {INCOMING_DIR} does not exist")
+    sys.exit(ExitCodes.MISSING_CONFIG)
+
+if not Path(OUTGOING_DIR).exists():
+    error_print(f"OUT path {OUTGOING_DIR} does not exist")
     sys.exit(ExitCodes.MISSING_CONFIG)
 
 DEFAULT_SORT_FILE_PATTERN = environ.get("DEFAULT_SORT_FILE_PATTERN",
@@ -60,7 +64,7 @@ try:
     with open(os.path.join(CONFIG_PATH, 'stations.json'), 'r') as json_file:
         stations = json.load(json_file)
 except FileNotFoundError:
-    debug_print("No stations.json found, maybe it is in task.json")
+    debug_print(f"No stations.json found in {CONFIG_PATH} - we may be in Mercure?")
 except JSONDecodeError:
     error_print("Invalid JSON file stations.json")
     sys.exit(ExitCodes.MISSING_CONFIG)
@@ -78,7 +82,7 @@ try:
             # Overwrite any existing stations
             stations.update(settings.get("stations", {}))
 except FileNotFoundError:
-    debug_print("No task.json found, not in Mercure?")
+    debug_print(f"{INCOMING_DIR}/task.json not found - not in Mercure?")
 except JSONDecodeError:
     error_print("Invalid JSON file task.json")
     sys.exit(ExitCodes.MISSING_CONFIG)

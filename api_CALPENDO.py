@@ -33,23 +33,26 @@ class CalpendoApi(AbstractApi):
         data = self.study_info(study_name)
 
         # Path is not set, go to a default location
-        if not data or not data['dataPath']:
+        if not data or "dataPath" not in data:
             debug_print(f"Project {study_name} not found in Calpendo")
             return patterns
 
-        if data['dataPath'] and data['dataPath'].startswith(r"\\"):
+        # We already tested for the existence of data['dataPath']
+        # Check if dataPath starts with a Windows-style path
+        if data['dataPath'].startswith(r"\\"):
             # Path is a Windows UNC, translate to a Unix Path
             data['dataPath'] = data['dataPath'].replace("\\", "/")
 
-        # There is a sorting pattern in the study
-        if data['pathPattern']:
+        # There is a sorting pattern in the study and it has a value
+        if data.get('pathPattern', False):
             patterns['sort_path_pattern'] = f"$OUTGOING_DIR/{data['pathPattern']}"
 
-        # There is a file pattern in the study
-        if data['filePattern']:
+        # There is a file pattern in the study and it has a value
+        if data.get('filePattern', False):
             patterns['sort_file_pattern'] = data['filePattern']
 
-        # Do this last, so pathPattern can override it
+        # If data['dataPath'] is not an empty value (eg. '')
+        # Replace the OUTGOING dir in the patterns
         if data['dataPath']:
             patterns['sort_path_pattern'] = patterns['sort_path_pattern'].replace("$OUTGOING_DIR", data['dataPath'])
 
