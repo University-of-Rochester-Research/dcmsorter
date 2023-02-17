@@ -33,7 +33,7 @@ class ExitCodes:
 
 DEBUG = environ.get("DEBUG", True)
 
-INCOMING_DIR = environ.get("MERCURE_IN_DIR", "/in")
+INCOMING_DIR = environ.get("MERCURE_IN_DIR", "/data")
 OUTGOING_DIR = environ.get("MERCURE_OUT_DIR", "/out")
 ARCHIVE_DIR = environ.get("ARCHIVE_DIR", "/archive")
 CONFIG_PATH = environ.get("CONFIG_DIR", "/app/config")
